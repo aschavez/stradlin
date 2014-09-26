@@ -30,7 +30,34 @@ function request_method_matches($methods) {
   return in_array($_SERVER['REQUEST_METHOD'], $methods);
 }
 
+function before($regexp, $methods, $callback) {
+
+  $regexp = sanitize_regexp($regexp);
+  $methods = array_methods($methods);
+
+  /* Match */
+  $uri = get_request_uri();
+  if (request_method_matches($methods) && preg_match($regexp, $uri, $params)) {
+    $callback($params);
+  }
+
+}
+
 function route($regexp, $methods, $callback) {
+
+  $regexp = sanitize_regexp($regexp);
+  $methods = array_methods($methods);
+
+  /* Match */
+  $uri = get_request_uri();
+  if (request_method_matches($methods) && preg_match($regexp, $uri, $params)) {
+    $callback($params);
+    exit();
+  }
+
+}
+
+function sanitize_regexp($regexp) {
 
   /* Sanitize regexp */
   if (!preg_match('/^\^(.)+$/', $regexp)) {
@@ -42,18 +69,19 @@ function route($regexp, $methods, $callback) {
   $regexp = str_replace("/", "\/", $regexp);
   $regexp = sprintf("/%s/", $regexp);
 
+  return $regexp;
+
+}
+
+function array_methods($methods) {
+
   /* Create array of accepted HTTP methods */
   $methods = explode(",", $methods) ;
   foreach($methods as $k=>$v) {
     $methods[$k] = trim(strtoupper($v));
-  } 
-
-  /* Match */
-  $uri = get_request_uri();
-  if (request_method_matches($methods) && preg_match($regexp, $uri, $params)) {
-    $callback($params);
-    exit();
   }
+
+  return $methods;
 
 }
 
